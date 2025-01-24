@@ -1,10 +1,25 @@
 {
   "generators": {
-    "address": 3,
+    "address": 2,
     "nonce": 0
   },
   "auth": [
-    []
+    [],
+    [
+      [
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
+        {
+          "function": {
+            "contract_fn": {
+              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "function_name": "",
+              "args": []
+            }
+          },
+          "sub_invocations": []
+        }
+      ]
+    ]
   ],
   "ledger": {
     "protocol_version": 22,
@@ -23,31 +38,14 @@
             "key": {
               "vec": [
                 {
-                  "symbol": "Allowance"
+                  "symbol": "Balance"
                 },
                 {
-                  "map": [
-                    {
-                      "key": {
-                        "symbol": "owner"
-                      },
-                      "val": {
-                        "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "spender"
-                      },
-                      "val": {
-                        "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
-                      }
-                    }
-                  ]
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
                 }
               ]
             },
-            "durability": "temporary"
+            "durability": "persistent"
           }
         },
         [
@@ -60,59 +58,25 @@
                 "key": {
                   "vec": [
                     {
-                      "symbol": "Allowance"
+                      "symbol": "Balance"
                     },
                     {
-                      "map": [
-                        {
-                          "key": {
-                            "symbol": "owner"
-                          },
-                          "val": {
-                            "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
-                          }
-                        },
-                        {
-                          "key": {
-                            "symbol": "spender"
-                          },
-                          "val": {
-                            "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
-                          }
-                        }
-                      ]
+                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
                     }
                   ]
                 },
-                "durability": "temporary",
+                "durability": "persistent",
                 "val": {
-                  "map": [
-                    {
-                      "key": {
-                        "symbol": "amount"
-                      },
-                      "val": {
-                        "i128": {
-                          "hi": 0,
-                          "lo": 10
-                        }
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "live_until_ledger"
-                      },
-                      "val": {
-                        "u32": 1000
-                      }
-                    }
-                  ]
+                  "i128": {
+                    "hi": 0,
+                    "lo": 50
+                  }
                 }
               }
             },
             "ext": "v0"
           },
-          1000
+          4095
         ]
       ],
       [
@@ -137,7 +101,23 @@
                     "executable": {
                       "wasm": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
                     },
-                    "storage": null
+                    "storage": [
+                      {
+                        "key": {
+                          "vec": [
+                            {
+                              "symbol": "TotalSupply"
+                            }
+                          ]
+                        },
+                        "val": {
+                          "i128": {
+                            "hi": 0,
+                            "lo": 50
+                          }
+                        }
+                      }
+                    ]
                   }
                 }
               }
@@ -213,27 +193,17 @@
           "v0": {
             "topics": [
               {
-                "symbol": "approve"
+                "symbol": "burn"
               },
               {
                 "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
-              },
-              {
-                "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
               }
             ],
             "data": {
-              "vec": [
-                {
-                  "i128": {
-                    "hi": 0,
-                    "lo": 10
-                  }
-                },
-                {
-                  "u32": 1000
-                }
-              ]
+              "i128": {
+                "hi": 0,
+                "lo": 50
+              }
             }
           }
         }
