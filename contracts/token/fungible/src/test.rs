@@ -11,9 +11,12 @@ use soroban_sdk::{
     vec, Address, Env, IntoVal,
 };
 
-use crate::storage::{
-    allowance, approve, balance, mint, set_allowance, spend_allowance, total_supply, transfer,
-    transfer_from, update, StorageKey, BALANCE_EXTEND_AMOUNT, INSTANCE_EXTEND_AMOUNT,
+use crate::{
+    extensions::mintable::storage::mint,
+    storage::{
+        allowance, approve, balance, set_allowance, spend_allowance, total_supply, transfer,
+        transfer_from, update, StorageKey, BALANCE_EXTEND_AMOUNT, INSTANCE_EXTEND_AMOUNT,
+    },
 };
 
 #[contract]
@@ -55,18 +58,6 @@ fn bump_instance_works() {
 
         total_supply(&e);
         assert_eq!(e.storage().instance().get_ttl(), INSTANCE_EXTEND_AMOUNT);
-    });
-}
-
-#[test]
-fn mint_works() {
-    let e = Env::default();
-    let address = e.register(MockContract, ());
-    let account = Address::generate(&e);
-    e.as_contract(&address, || {
-        mint(&e, &account, 100);
-        assert_eq!(balance(&e, &account), 100);
-        assert_eq!(total_supply(&e), 100);
     });
 }
 
@@ -205,7 +196,7 @@ fn transfer_works() {
         assert_eq!(balance(&e, &recipient), 50);
 
         let events = e.events().all();
-        assert_eq!(events.len(), 1);
+        assert_eq!(events.len(), 2);
     });
 }
 
