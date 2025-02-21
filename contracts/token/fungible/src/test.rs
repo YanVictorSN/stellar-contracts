@@ -174,6 +174,20 @@ fn set_allowance_with_expired_ledger_fails() {
 }
 
 #[test]
+#[should_panic(expected = "Error(Contract, #202)")]
+fn set_allowance_with_greater_than_max_ledger_fails() {
+    let e = Env::default();
+    let address = e.register(MockContract, ());
+    let owner = Address::generate(&e);
+    let spender = Address::generate(&e);
+
+    e.as_contract(&address, || {
+        let ttl = e.storage().max_ttl() + 1;
+        set_allowance(&e, &owner, &spender, 50, ttl, true);
+    });
+}
+
+#[test]
 #[should_panic(expected = "Error(Contract, #203)")]
 fn set_allowance_with_neg_amount_fails() {
     let e = Env::default();
