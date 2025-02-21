@@ -38,6 +38,7 @@
 //! - Mintable: Allows creation of new tokens that increases the total supply.
 //! - Burnable: Enables token holders to destroy their tokens, reducing the
 //!   total supply.
+//! - Capped: Enables the contract to set a maximum limit on the total supply.
 //!
 //! ## Compatibility and Compliance
 //!
@@ -72,7 +73,7 @@ mod extensions;
 mod fungible;
 mod storage;
 
-pub use extensions::{burnable, metadata, mintable};
+pub use extensions::{burnable, capped, metadata, mintable};
 pub use fungible::{
     emit_approve, emit_transfer, FungibleToken, FungibleTokenClient, FungibleTokenError,
 };

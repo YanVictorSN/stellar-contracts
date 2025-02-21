@@ -196,6 +196,13 @@ pub enum FungibleTokenError {
     MathOverflow = 204,
     /// Indicates access to uninitialized metadata
     UnsetMetadata = 205,
+    /// Indicates that the operation would have caused `total_supply` to exceed
+    /// the `cap`.
+    ExceededCap = 206,
+    /// Indicates the supplied `cap` is not a valid cap value.
+    InvalidCap = 207,
+    /// Indicates the Cap was not set.
+    CapNotSet = 208,
 }
 
 // ################## EVENTS ##################
