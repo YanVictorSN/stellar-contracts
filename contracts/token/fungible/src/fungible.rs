@@ -194,6 +194,8 @@ pub enum FungibleTokenError {
     LessThanZero = 203,
     /// Indicates overflow when adding two values
     MathOverflow = 204,
+    /// Indicates access to uninitialized metadata
+    UnsetMetadata = 205,
 }
 
 // ################## EVENTS ##################
