@@ -67,7 +67,7 @@ impl Pausable for ExampleContract {
         let owner: Address =
             e.storage().instance().get(&DataKey::Owner).expect("owner should be set");
         if owner != caller {
-            panic_with_error!(e, ExampleContractError::Unauthorized)
+            panic_with_error!(e, ExampleContractError::Unauthorized);
         }
 
         pausable::pause(e, &caller);
@@ -80,7 +80,7 @@ impl Pausable for ExampleContract {
         let owner: Address =
             e.storage().instance().get(&DataKey::Owner).expect("owner should be set");
         if owner != caller {
-            panic_with_error!(e, ExampleContractError::Unauthorized)
+            panic_with_error!(e, ExampleContractError::Unauthorized);
         }
 
         pausable::unpause(e, &caller);
