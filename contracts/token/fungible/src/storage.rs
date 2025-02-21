@@ -44,7 +44,6 @@ pub enum StorageKey {
 ///
 /// * `e` - Access to the Soroban environment.
 pub fn total_supply(e: &Env) -> i128 {
-    e.storage().instance().extend_ttl(INSTANCE_TTL_THRESHOLD, INSTANCE_EXTEND_AMOUNT);
     e.storage().instance().get(&StorageKey::TotalSupply).unwrap_or(0)
 }
 
