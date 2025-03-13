@@ -1,5 +1,5 @@
 [package]
-name = "openzeppelin-pausable-macros"
+name = "stellar-constants"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
@@ -7,10 +7,8 @@ publish = false
 version.workspace = true
 
 [lib]
-proc-macro = true
+crate-type = ["lib", "cdylib"]
 doctest = false
 
 [dependencies]
-proc-macro2 = { workspace = true }
-quote = { workspace = true }
-syn = { workspace = true }
+soroban-sdk = { workspace = true }

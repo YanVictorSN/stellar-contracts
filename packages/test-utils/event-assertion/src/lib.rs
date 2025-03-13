@@ -1,4 +1,4 @@
-#![cfg(test)]
+#![cfg(not(target_arch = "wasm32"))]
 
 use soroban_sdk::{symbol_short, testutils::Events, Address, Env, IntoVal, Symbol, Val, Vec};
 
