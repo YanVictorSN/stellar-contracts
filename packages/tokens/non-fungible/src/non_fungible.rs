@@ -1,23 +1,28 @@
-use soroban_sdk::{contractclient, contracterror, symbol_short, Address, Env, String, Symbol};
+use soroban_sdk::{contracterror, symbol_short, Address, Env, String, Symbol};
+
+use crate::ContractOverrides;
 
 /// Vanilla NonFungible Token Trait
 ///
 /// The `NonFungibleToken` trait defines the core functionality for non-fungible
 /// tokens. It provides a standard interface for managing
 /// transfers and approvals associated with non-fungible tokens.
-#[contractclient(name = "NonFungibleTokenClient")]
 pub trait NonFungibleToken {
+    /// Helper type that allows us to override some of the functionality of the
+    /// base trait based on the extensions implemented. You should use
+    /// `BaseContract` as the type if you are not using `Enumerable` or
+    /// `Consecutive` extensions.
+    type ContractType: ContractOverrides;
+
     /// Returns the number of tokens in `owner`'s account.
     ///
     /// # Arguments
     ///
     /// * `e` - Access to the Soroban environment.
     /// * `owner` - Account of the token's owner.
-    ///
-    /// # Notes
-    ///
-    /// We recommend using [`crate::balance()`] when implementing this function.
-    fn balance(e: &Env, owner: Address) -> u32;
+    fn balance(e: &Env, owner: Address) -> u32 {
+        crate::balance(e, &owner)
+    }
 
     /// Returns the owner of the `token_id` token.
     ///
@@ -33,9 +38,11 @@ pub trait NonFungibleToken {
     ///
     /// # Notes
     ///
-    /// We recommend using [`crate::owner_of()`] when implementing this
-    /// function.
-    fn owner_of(e: &Env, token_id: u32) -> Address;
+    /// This function's behavior is shaped by the extensions implemented.
+    /// It should be configured via the `ContractBehavior` helper trait.
+    fn owner_of(e: &Env, token_id: u32) -> Address {
+        Self::ContractType::owner_of(e, token_id)
+    }
 
     /// Transfers `token_id` token from `from` to `to`.
     ///
@@ -64,9 +71,11 @@ pub trait NonFungibleToken {
     ///
     /// # Notes
     ///
-    /// We recommend using [`crate::transfer()`] when implementing this
-    /// function.
-    fn transfer(e: &Env, from: Address, to: Address, token_id: u32);
+    /// This function's behavior is shaped by the extensions implemented.
+    /// It should be configured via the `ContractBehavior` helper trait.
+    fn transfer(e: &Env, from: Address, to: Address, token_id: u32) {
+        Self::ContractType::transfer(e, from, to, token_id);
+    }
 
     /// Transfers `token_id` token from `from` to `to` by using `spender`s
     /// approval.
@@ -104,9 +113,11 @@ pub trait NonFungibleToken {
     ///
     /// # Notes
     ///
-    /// We recommend using [`crate::transfer_from()`] when implementing this
-    /// function.
-    fn transfer_from(e: &Env, spender: Address, from: Address, to: Address, token_id: u32);
+    /// This function's behavior is shaped by the extensions implemented.
+    /// It should be configured via the `ContractBehavior` helper trait.
+    fn transfer_from(e: &Env, spender: Address, from: Address, to: Address, token_id: u32) {
+        Self::ContractType::transfer_from(e, spender, from, to, token_id);
+    }
 
     /// Gives permission to `approved` to transfer `token_id` token to another
     /// account. The approval is cleared when the token is transferred.
@@ -141,15 +152,17 @@ pub trait NonFungibleToken {
     ///
     /// # Notes
     ///
-    /// We recommend using [`crate::approve()`] when implementing this
-    /// function.
+    /// This function's behavior is shaped by the extensions implemented.
+    /// It should be configured via the `ContractBehavior` helper trait.
     fn approve(
         e: &Env,
         approver: Address,
         approved: Address,
         token_id: u32,
         live_until_ledger: u32,
-    );
+    ) {
+        Self::ContractType::approve(e, approver, approved, token_id, live_until_ledger);
+    }
 
     /// Approve or remove `operator` as an operator for the owner.
     ///
@@ -173,12 +186,9 @@ pub trait NonFungibleToken {
     ///
     /// * topics - `["approve_for_all", from: Address]`
     /// * data - `[operator: Address, live_until_ledger: u32]`
-    ///
-    /// # Notes
-    ///
-    /// We recommend using [`crate::approve_for_all()`] when implementing
-    /// this function.
-    fn approve_for_all(e: &Env, owner: Address, operator: Address, live_until_ledger: u32);
+    fn approve_for_all(e: &Env, owner: Address, operator: Address, live_until_ledger: u32) {
+        crate::approve_for_all(e, &owner, &operator, live_until_ledger);
+    }
 
     /// Returns the account approved for `token_id` token.
     ///
@@ -191,12 +201,9 @@ pub trait NonFungibleToken {
     ///
     /// * [`NonFungibleTokenError::NonexistentToken`] - If the token does not
     ///   exist.
-    ///
-    /// # Notes
-    ///
-    /// We recommend using [`crate::get_approved()`] when implementing this
-    /// function.
-    fn get_approved(e: &Env, token_id: u32) -> Option<Address>;
+    fn get_approved(e: &Env, token_id: u32) -> Option<Address> {
+        crate::get_approved(e, token_id)
+    }
 
     /// Returns whether the `operator` is allowed to manage all the assets of
     /// `owner`.
@@ -206,12 +213,9 @@ pub trait NonFungibleToken {
     /// * `e` - Access to the Soroban environment.
     /// * `owner` - Account of the token's owner.
     /// * `operator` - Account to be checked.
-    ///
-    /// # Notes
-    ///
-    /// We recommend using [`crate::is_approved_for_all()`] when implementing
-    /// this function.
-    fn is_approved_for_all(e: &Env, owner: Address, operator: Address) -> bool;
+    fn is_approved_for_all(e: &Env, owner: Address, operator: Address) -> bool {
+        crate::is_approved_for_all(e, &owner, &operator)
+    }
 
     /// Returns the token collection name.
     ///
@@ -262,6 +266,8 @@ pub enum NonFungibleTokenError {
     MathOverflow = 305,
     /// Indicates all possible `token_id`s are already in use.
     TokenIDsAreDepleted = 306,
+    /// Indicates a token with given `token_id` already exists.
+    TokenIDInUse = 307,
 }
 
 // ################## EVENTS ##################

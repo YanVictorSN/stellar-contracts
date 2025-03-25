@@ -1,9 +1,10 @@
 mod storage;
 pub use self::storage::{burn, burn_from};
+use crate::{Base, NonFungibleToken};
 
 mod test;
 
-use soroban_sdk::{contractclient, symbol_short, Address, Env};
+use soroban_sdk::{symbol_short, Address, Env};
 
 /// Burnable Trait for Non-Fungible Token
 ///
@@ -14,8 +15,7 @@ use soroban_sdk::{contractclient, symbol_short, Address, Env};
 /// Excluding the `burn` functionality from the `[NonFungibleToken]` trait
 /// is a deliberate design choice to accommodate flexibility and customization
 /// for various smart contract use cases.
-#[contractclient(name = "NonFungibleBurnableClient")]
-pub trait NonFungibleBurnable {
+pub trait NonFungibleBurnable: NonFungibleToken<ContractType = Base> {
     /// Destroys the `token_id` from `account`.
     ///
     /// # Arguments
@@ -35,12 +35,9 @@ pub trait NonFungibleBurnable {
     ///
     /// * topics - `["burn", from: Address]`
     /// * data - `[token_id: u32]`
-    ///
-    /// # Notes
-    ///
-    /// We recommend using [`crate::burnable::burn()`] when implementing this
-    /// function.
-    fn burn(e: &Env, from: Address, token_id: u32);
+    fn burn(e: &Env, from: Address, token_id: u32) {
+        crate::burnable::burn(e, &from, token_id);
+    }
 
     /// Destroys the `token_id` from `account`, by using `spender`s approval.
     ///
@@ -65,12 +62,9 @@ pub trait NonFungibleBurnable {
     ///
     /// * topics - `["burn", from: Address]`
     /// * data - `[token_id: u32]`
-    ///
-    /// # Notes
-    ///
-    /// We recommend using [`crate::burnable::burn_from()`] when implementing
-    /// this function.
-    fn burn_from(e: &Env, spender: Address, from: Address, token_id: u32);
+    fn burn_from(e: &Env, spender: Address, from: Address, token_id: u32) {
+        crate::burnable::burn_from(e, &spender, &from, token_id);
+    }
 }
 
 // ################## EVENTS ##################
