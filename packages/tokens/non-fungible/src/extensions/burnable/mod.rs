@@ -1,6 +1,6 @@
 mod storage;
 pub use self::storage::{burn, burn_from};
-use crate::{Base, NonFungibleToken};
+use crate::{Base, NonFungibleToken, TokenId};
 
 mod test;
 
@@ -34,8 +34,8 @@ pub trait NonFungibleBurnable: NonFungibleToken<ContractType = Base> {
     /// # Events
     ///
     /// * topics - `["burn", from: Address]`
-    /// * data - `[token_id: u32]`
-    fn burn(e: &Env, from: Address, token_id: u32) {
+    /// * data - `[token_id: TokenId]`
+    fn burn(e: &Env, from: Address, token_id: TokenId) {
         crate::burnable::burn(e, &from, token_id);
     }
 
@@ -61,8 +61,8 @@ pub trait NonFungibleBurnable: NonFungibleToken<ContractType = Base> {
     /// # Events
     ///
     /// * topics - `["burn", from: Address]`
-    /// * data - `[token_id: u32]`
-    fn burn_from(e: &Env, spender: Address, from: Address, token_id: u32) {
+    /// * data - `[token_id: TokenId]`
+    fn burn_from(e: &Env, spender: Address, from: Address, token_id: TokenId) {
         crate::burnable::burn_from(e, &spender, &from, token_id);
     }
 }
@@ -80,8 +80,8 @@ pub trait NonFungibleBurnable: NonFungibleToken<ContractType = Base> {
 /// # Events
 ///
 /// * topics - `["burn", from: Address]`
-/// * data - `[token_id: u32]`
-pub fn emit_burn(e: &Env, from: &Address, token_id: u32) {
+/// * data - `[token_id: TokenId]`
+pub fn emit_burn(e: &Env, from: &Address, token_id: TokenId) {
     let topics = (symbol_short!("burn"), from);
     e.events().publish(topics, token_id)
 }
