@@ -142,7 +142,9 @@ pub fn is_approved_for_all(e: &Env, owner: &Address, operator: &Address) -> bool
 ///
 /// # Notes
 ///
-/// **IMPORTANT**: If the recipient is unable to receive, the NFT may get lost.
+/// * Authorization for `from` is required.
+/// * **IMPORTANT**: If the recipient is unable to receive, the NFT may get
+///   lost.
 pub fn transfer(e: &Env, from: &Address, to: &Address, token_id: TokenId) {
     from.require_auth();
     update(e, Some(from), Some(to), token_id);
@@ -172,7 +174,9 @@ pub fn transfer(e: &Env, from: &Address, to: &Address, token_id: TokenId) {
 ///
 /// # Notes
 ///
-/// **IMPORTANT**: If the recipient is unable to receive, the NFT may get lost.
+/// * Authorization for `spender` is required.
+/// * **IMPORTANT**: If the recipient is unable to receive, the NFT may get
+///   lost.
 pub fn transfer_from(e: &Env, spender: &Address, from: &Address, to: &Address, token_id: TokenId) {
     spender.require_auth();
     check_spender_approval(e, spender, from, token_id);
@@ -193,16 +197,17 @@ pub fn transfer_from(e: &Env, spender: &Address, from: &Address, to: &Address, t
 ///
 /// # Errors
 ///
-/// * [`NonFungibleTokenError::InvalidApprover`] - If the owner address is not
-///   the actual owner of the token.
-/// * [`NonFungibleTokenError::InvalidLiveUntilLedger`] - If the ledger number
-///   is less than the current ledger number.
 /// * refer to [`owner_of`] errors.
+/// * refer to [`approve_for_owner`] errors.
 ///
 /// # Events
 ///
 /// * topics - `["approve", owner: Address, token_id: TokenId]`
 /// * data - `[approved: Address, live_until_ledger: u32]`
+///
+/// # Notes
+///
+/// * Authorization for `approver` is required.
 pub fn approve(
     e: &Env,
     approver: &Address,
@@ -213,25 +218,7 @@ pub fn approve(
     approver.require_auth();
 
     let owner = owner_of(e, token_id);
-    if *approver != owner && !is_approved_for_all(e, &owner, approver) {
-        panic_with_error!(e, NonFungibleTokenError::InvalidApprover);
-    }
-
-    if live_until_ledger < e.ledger().sequence() {
-        panic_with_error!(e, NonFungibleTokenError::InvalidLiveUntilLedger);
-    }
-
-    let key = StorageKey::Approval(token_id);
-
-    let approval_data = ApprovalData { approved: approved.clone(), live_until_ledger };
-
-    e.storage().temporary().set(&key, &approval_data);
-
-    let live_for = live_until_ledger - e.ledger().sequence();
-
-    e.storage().temporary().extend_ttl(&key, live_for, live_for);
-
-    emit_approve(e, approver, approved, token_id, live_until_ledger);
+    approve_for_owner(e, &owner, approver, approved, token_id, live_until_ledger);
 }
 
 /// Sets or removes operator approval for managing all tokens owned by the
@@ -254,6 +241,10 @@ pub fn approve(
 ///
 /// * topics - `["approve", owner: Address]`
 /// * data - `[operator: Address, live_until_ledger: u32]`
+///
+/// # Notes
+///
+/// * Authorization for `owner` is required.
 pub fn approve_for_all(e: &Env, owner: &Address, operator: &Address, live_until_ledger: u32) {
     owner.require_auth();
 
@@ -296,8 +287,8 @@ pub fn approve_for_all(e: &Env, owner: &Address, operator: &Address, live_until_
     emit_approve_for_all(e, owner, operator, live_until_ledger);
 }
 
-/// Low-level function for handling transfers for NFTs, but doesn't
-/// handle authorization. Updates ownership records, adjusts balances,
+/// Low-level function for handling transfers, mints and burns of an NFT,
+/// without handling authorization. Updates ownership records, adjusts balances,
 /// and clears existing approvals.
 ///
 /// # Arguments
@@ -311,8 +302,9 @@ pub fn approve_for_all(e: &Env, owner: &Address, operator: &Address, live_until_
 ///
 /// * [`NonFungibleTokenError::IncorrectOwner`] - If the `from` address is not
 ///   the owner of the token.
-/// * [`NonFungibleTokenError::MathOverflow`] - If the balance of the `to` would
-///   overflow.
+/// * refer to [`owner_of`] errors.
+/// * refer to [`decrease_balance`] errors.
+/// * refer to [`increase_balance`] errors.
 pub fn update(e: &Env, from: Option<&Address>, to: Option<&Address>, token_id: TokenId) {
     if let Some(from_address) = from {
         let owner = owner_of(e, token_id);
@@ -322,11 +314,7 @@ pub fn update(e: &Env, from: Option<&Address>, to: Option<&Address>, token_id: T
             panic_with_error!(e, NonFungibleTokenError::IncorrectOwner);
         }
 
-        // Update the balance of the `from` address
-        // No need to check for underflow here, as `owner` cannot have `0` balance,
-        // and if `from_balance` is not the `owner`, we have already panicked above.
-        let from_balance = balance(e, from_address) - 1;
-        e.storage().persistent().set(&StorageKey::Balance(from_address.clone()), &from_balance);
+        decrease_balance(e, from_address, 1);
 
         // Clear any existing approval
         let approval_key = StorageKey::Approval(token_id);
@@ -337,11 +325,7 @@ pub fn update(e: &Env, from: Option<&Address>, to: Option<&Address>, token_id: T
     }
 
     if let Some(to_address) = to {
-        // Update the balance of the `to` address
-        let Some(to_balance) = balance(e, to_address).checked_add(1) else {
-            panic_with_error!(e, NonFungibleTokenError::MathOverflow);
-        };
-        e.storage().persistent().set(&StorageKey::Balance(to_address.clone()), &to_balance);
+        increase_balance(e, to_address, 1);
 
         // Set the new owner
         e.storage().persistent().set(&StorageKey::Owner(token_id), to_address);
@@ -351,14 +335,63 @@ pub fn update(e: &Env, from: Option<&Address>, to: Option<&Address>, token_id: T
     }
 }
 
-/// Low-level function for checking if the `spender` has enough approval.
-/// Panics if the approval check fails.
+/// Low-level function for approving `token_id` without checking its ownership
+/// and without handling authorization.
+///
+/// # Arguments
+///
+/// * `e` - Access to the Soroban environment.
+/// * `approver` - The address of the approver (should be `owner` or
+///   `operator`).
+/// * `approved` - The address receiving the approval.
+/// * `token_id` - The identifier of the token to be approved.
+/// * `live_until_ledger` - The ledger number at which the approval expires.
+///
+/// # Errors
+///
+/// * [`NonFungibleTokenError::InvalidApprover`] - If the owner address is not
+///   the actual owner of the token.
+/// * [`NonFungibleTokenError::InvalidLiveUntilLedger`] - If the ledger number
+///   is less than the current ledger number.
+pub fn approve_for_owner(
+    e: &Env,
+    owner: &Address,
+    approver: &Address,
+    approved: &Address,
+    token_id: TokenId,
+    live_until_ledger: u32,
+) {
+    if approver != owner && !is_approved_for_all(e, owner, approver) {
+        panic_with_error!(e, NonFungibleTokenError::InvalidApprover);
+    }
+
+    if live_until_ledger < e.ledger().sequence() {
+        panic_with_error!(e, NonFungibleTokenError::InvalidLiveUntilLedger);
+    }
+
+    let key = StorageKey::Approval(token_id);
+
+    let approval_data = ApprovalData { approved: approved.clone(), live_until_ledger };
+
+    e.storage().temporary().set(&key, &approval_data);
+
+    let live_for = live_until_ledger - e.ledger().sequence();
+
+    e.storage().temporary().extend_ttl(&key, live_for, live_for);
+
+    emit_approve(e, approver, approved, token_id, live_until_ledger);
+}
+
+/// Low-level function for checking if the `spender` has enough approval prior a
+/// transfer, without checking ownership of `token_id` and without handling
+/// authorization.
 ///
 /// # Arguments
 ///
 /// * `e` - Access to the Soroban environment.
 /// * `spender` - The address attempting to transfer the token.
 /// * `owner` - The address of the current token owner.
+/// * `token_id` - The identifier of the token to be transferred.
 ///
 /// # Errors
 /// * [`NonFungibleTokenError::InsufficientApproval`] - If the `spender` don't
@@ -372,4 +405,44 @@ pub fn check_spender_approval(e: &Env, spender: &Address, owner: &Address, token
     if !is_spender_owner && !is_spender_approved && !has_spender_approval_for_all {
         panic_with_error!(e, NonFungibleTokenError::InsufficientApproval);
     }
+}
+
+/// Low-level function for increasing the balance of `to`, without handling
+/// authorization.
+///
+/// # Arguments
+///
+/// * `e` - Access to the Soroban environment.
+/// * `to` - The address whose balance gets increased.
+/// * `amount` - The amount by which the balance gets increased.
+///
+/// # Errors
+///
+/// * [`NonFungibleTokenError::MathOverflow`] - If the balance of the `to` would
+///   overflow.
+pub fn increase_balance(e: &Env, to: &Address, amount: TokenId) {
+    let Some(balance) = balance(e, to).checked_add(amount) else {
+        panic_with_error!(e, NonFungibleTokenError::MathOverflow);
+    };
+    e.storage().persistent().set(&StorageKey::Balance(to.clone()), &balance);
+}
+
+/// Low-level function for decreasing the balance of `to`, without handling
+/// authorization.
+///
+/// # Arguments
+///
+/// * `e` - Access to the Soroban environment.
+/// * `to` - The address whose balance gets decreased.
+/// * `amount` - The amount by which the balance gets decreased.
+///
+/// # Errors
+///
+/// * [`NonFungibleTokenError::MathOverflow`] - If the balance of the `from`
+///   would overflow.
+pub fn decrease_balance(e: &Env, from: &Address, amount: TokenId) {
+    let Some(balance) = balance(e, from).checked_sub(amount) else {
+        panic_with_error!(e, NonFungibleTokenError::MathOverflow);
+    };
+    e.storage().persistent().set(&StorageKey::Balance(from.clone()), &balance);
 }
