@@ -27,12 +27,15 @@ impl ExampleContract {
     }
 }
 
+// You don't have to provide the implementations for all the methods,
+// `#[default_impl]` macro does this for you. This example showcases
+// what is happening under the hood when you use `#[default_impl]` macro.
 #[contractimpl]
 impl NonFungibleToken for ExampleContract {
     type ContractType = Consecutive;
 
     fn balance(e: &Env, owner: Address) -> Balance {
-        Self::ContractType::balance(e, owner)
+        Self::ContractType::balance(e, &owner)
     }
 
     fn owner_of(e: &Env, token_id: TokenId) -> Address {
@@ -58,7 +61,7 @@ impl NonFungibleToken for ExampleContract {
     }
 
     fn approve_for_all(e: &Env, owner: Address, operator: Address, live_until_ledger: u32) {
-        Self::ContractType::approve_for_all(e, owner, operator, live_until_ledger);
+        Self::ContractType::approve_for_all(e, &owner, &operator, live_until_ledger);
     }
 
     fn get_approved(e: &Env, token_id: TokenId) -> Option<Address> {
@@ -66,7 +69,7 @@ impl NonFungibleToken for ExampleContract {
     }
 
     fn is_approved_for_all(e: &Env, owner: Address, operator: Address) -> bool {
-        Self::ContractType::is_approved_for_all(e, owner, operator)
+        Self::ContractType::is_approved_for_all(e, &owner, &operator)
     }
 
     fn name(e: &Env) -> String {
@@ -86,7 +89,7 @@ impl NonFungibleConsecutive for ExampleContract {}
 
 #[contractimpl]
 impl ExampleContract {
-    pub fn batch_mint(e: &Env, to: Address, amount: TokenId) -> TokenId {
+    pub fn batch_mint(e: &Env, to: Address, amount: Balance) -> TokenId {
         Consecutive::batch_mint(e, &to, amount)
     }
 

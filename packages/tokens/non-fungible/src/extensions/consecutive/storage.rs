@@ -8,7 +8,7 @@ use crate::{
     emit_transfer,
     extensions::consecutive::emit_consecutive_mint,
     sequential::{self as sequential},
-    Base, ContractOverrides, NonFungibleTokenError, TokenId,
+    Balance, Base, ContractOverrides, NonFungibleTokenError, TokenId,
 };
 
 pub struct Consecutive;
@@ -22,22 +22,22 @@ impl ContractOverrides for Consecutive {
         Consecutive::token_uri(e, token_id)
     }
 
-    fn transfer(e: &Env, from: Address, to: Address, token_id: TokenId) {
-        Consecutive::transfer(e, &from, &to, token_id);
+    fn transfer(e: &Env, from: &Address, to: &Address, token_id: TokenId) {
+        Consecutive::transfer(e, from, to, token_id);
     }
 
-    fn transfer_from(e: &Env, spender: Address, from: Address, to: Address, token_id: TokenId) {
-        Consecutive::transfer_from(e, &spender, &from, &to, token_id);
+    fn transfer_from(e: &Env, spender: &Address, from: &Address, to: &Address, token_id: TokenId) {
+        Consecutive::transfer_from(e, spender, from, to, token_id);
     }
 
     fn approve(
         e: &Env,
-        approver: Address,
-        approved: Address,
+        approver: &Address,
+        approved: &Address,
         token_id: TokenId,
         live_until_ledger: u32,
     ) {
-        Consecutive::approve(e, &approver, &approved, token_id, live_until_ledger);
+        Consecutive::approve(e, approver, approved, token_id, live_until_ledger);
     }
 }
 
@@ -147,7 +147,7 @@ impl Consecutive {
     /// ```
     ///
     /// Failing to add proper authorization could allow anyone to mint tokens!
-    pub fn batch_mint(e: &Env, to: &Address, amount: TokenId) -> TokenId {
+    pub fn batch_mint(e: &Env, to: &Address, amount: Balance) -> TokenId {
         let first_id = sequential::increment_token_id(e, amount);
 
         e.storage().persistent().set(&StorageKey::Owner(first_id), &to);

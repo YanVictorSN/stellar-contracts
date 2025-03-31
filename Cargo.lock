@@ -789,6 +789,7 @@ name = "nft-enumerable-example"
 version = "0.1.0"
 dependencies = [
  "soroban-sdk",
+ "stellar-default-impl-macro",
  "stellar-non-fungible",
 ]
 
@@ -797,6 +798,7 @@ name = "nft-sequential-minting-example"
 version = "0.1.0"
 dependencies = [
  "soroban-sdk",
+ "stellar-default-impl-macro",
  "stellar-non-fungible",
 ]
 
@@ -1332,6 +1334,15 @@ name = "stellar-constants"
 version = "0.1.0"
 dependencies = [
  "soroban-sdk",
+]
+
+[[package]]
+name = "stellar-default-impl-macro"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.96",
 ]
 
 [[package]]
