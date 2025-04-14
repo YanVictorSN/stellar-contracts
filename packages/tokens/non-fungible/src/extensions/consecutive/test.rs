@@ -214,7 +214,7 @@ fn consecutive_burn_from_works() {
         assert!(burned);
         assert_eq!(Consecutive::owner_of(&e, token_id + 1), owner);
 
-        let  mut event_assert = EventAssertion::new(&e, address.clone());
+        let mut event_assert = EventAssertion::new(&e, address.clone());
         event_assert.assert_event_count(3);
         event_assert.assert_consecutive_mint(&owner, 0, 99);
         event_assert.assert_non_fungible_approve(&owner, &spender, token_id, 100);

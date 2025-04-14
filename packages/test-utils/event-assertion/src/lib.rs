@@ -1,7 +1,8 @@
 #![cfg(not(target_arch = "wasm32"))]
 
-use soroban_sdk::{symbol_short, testutils::Events, Address, Env, IntoVal, Symbol, Val, Vec};
 use std::collections::HashSet;
+
+use soroban_sdk::{symbol_short, testutils::Events, Address, Env, IntoVal, Symbol, Val, Vec};
 use stellar_non_fungible::TokenId;
 
 pub struct EventAssertion<'a> {
@@ -72,7 +73,12 @@ impl<'a> EventAssertion<'a> {
         assert_eq!(event_amount, amount, "Transfer event has wrong amount");
     }
 
-    pub fn assert_non_fungible_transfer(&mut self, from: &Address, to: &Address, token_id: TokenId) {
+    pub fn assert_non_fungible_transfer(
+        &mut self,
+        from: &Address,
+        to: &Address,
+        token_id: TokenId,
+    ) {
         let transfer_event = self.find_event_by_symbol("transfer");
 
         assert!(transfer_event.is_some(), "Transfer event not found in event log");
