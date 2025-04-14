@@ -43,7 +43,7 @@ impl<'a> EventAssertion<'a> {
 
                 if topic_symbol == target_symbol {
                     self.processed_events.insert(index_u32);
-                    return Some((contract.clone(), topics_clone, data.clone()));
+                    return Some((contract.clone(), topics_clone, data));
                 }
             }
         }
