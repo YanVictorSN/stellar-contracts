@@ -435,15 +435,12 @@ fn test_counter_works() {
 
     e.as_contract(&address, || {
         let token_id1 = Base::sequential_mint(&e, &owner);
-        let _token_id2 = Base::sequential_mint(&e, &owner);
+        let token_id2 = Base::sequential_mint(&e, &owner);
 
         let mut event_assert = EventAssertion::new(&e, address.clone());
         event_assert.assert_event_count(2);
         event_assert.assert_non_fungible_mint(&owner, token_id1);
-
-        // TODO: below fails because the same event is read by the
-        // `event_assert`, not the next one. event_assert.
-        // assert_non_fungible_mint(&owner, token_id2);
+        event_assert.assert_non_fungible_mint(&owner, token_id2);
     });
 }
 
